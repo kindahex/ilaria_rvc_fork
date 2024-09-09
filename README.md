@@ -6,6 +6,7 @@ colorTo: pink
 sdk: gradio
 app_file: app.py
 pinned: true
+sdk_version: 3.43.0
 ---
 
 ![Ilaria AI Suite](./ilariaaisuite.png)
