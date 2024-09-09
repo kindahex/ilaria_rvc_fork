@@ -10,3 +10,4 @@ scipy
 onnxruntime-gpu
 samplerate
 transformers
+yt_dlp
