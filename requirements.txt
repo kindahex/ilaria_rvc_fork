@@ -11,3 +11,4 @@ samplerate
 transformers
 psutil
 py-cpuinfo
+gradio==3.43.0
