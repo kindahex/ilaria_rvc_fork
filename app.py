@@ -1,7 +1,6 @@
 import gradio as gr
 import requests
 import random
-import os
 import zipfile 
 import librosa
 import time
@@ -14,6 +13,17 @@ from audio_separator.separator import Separator
 import model_handler
 import psutil
 import cpuinfo
+import os
+import re
+import random
+from scipy.io.wavfile import write
+from scipy.io.wavfile import read
+import numpy as np
+import gradio as gr
+import yt_dlp
+import subprocess
+
+
 
 language_dict = tts_order_voice
 
@@ -274,6 +284,28 @@ def upload_model(index_file, pth_file, model_name):
     MODELS.append({"model": pth_file, "index": index_file, "model_name": model_name})
     return "Uploaded!"  
 
+
+
+def download_audio(url):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': 'ytdl/%(title)s.%(ext)s',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'wav',
+            'preferredquality': '192',
+        }],
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        file_path = ydl.prepare_filename(info_dict).rsplit('.', 1)[0] + '.wav'
+        sample_rate, audio_data = read(file_path)
+        audio_array = np.asarray(audio_data, dtype=np.int16)
+
+        return sample_rate, audio_array
+
+
 with gr.Blocks(theme="Hev832/niceandsimple", title="Ilaria RVC 💖") as app:
     gr.Markdown("## Ilaria RVC 💖")
     gr.Markdown("**Help keeping up the GPU donating on [Ko-Fi](https://ko-fi.com/ilariaowo)**")
@@ -346,7 +378,7 @@ with gr.Blocks(theme="Hev832/niceandsimple", title="Ilaria RVC 💖") as app:
     
 
     with gr.Tab("Vocal Separator (UVR)"):
-        gr.Markdown("Separate vocals and instruments from an audio file using UVR models. - This is only on CPU due to ZeroGPU being ZeroGPU :(")
+        gr.Markdown("Separate vocals and instruments from an audio file using UVR models.")
         uvr5_audio_file = gr.Audio(label="Audio File",type="filepath")
 
         with gr.Row():
@@ -357,7 +389,21 @@ with gr.Blocks(theme="Hev832/niceandsimple", title="Ilaria RVC 💖") as app:
         uvr5_output_inst = gr.Audio(type="filepath", label="Output 2",)
 
         uvr5_button.click(inference, [uvr5_audio_file, uvr5_model], [uvr5_output_voc, uvr5_output_inst])
-    
+        with gr.Accordion("separation by link:"):
+            with gr.Row():
+                gr.Markdown("You can paste the link to the video/audio from many sites, check the complete list [here](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)")
+            with gr.Row():
+                roformer_link = gr.Textbox(
+                    label = "Link",
+                    placeholder = "Paste the link here",
+                    interactive = True
+                )
+            with gr.Row():
+                roformer_download_button = gr.Button(
+                    "Download!",
+                    variant = "primary"
+                )
+        roformer_download_button.click(download_audio, [roformer_link], [uvr5_audio_file])
 
 
     with gr.Tab("Credits"):
