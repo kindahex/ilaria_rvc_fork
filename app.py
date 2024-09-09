@@ -274,7 +274,7 @@ def upload_model(index_file, pth_file, model_name):
     MODELS.append({"model": pth_file, "index": index_file, "model_name": model_name})
     return "Uploaded!"  
 
-with gr.Blocks(theme=gr.themes.Default(primary_hue="pink", secondary_hue="rose"), title="Ilaria RVC 💖") as app:
+with gr.Blocks(theme=gr.themes.Soft(primary_hue="pink", secondary_hue="rose"), title="Ilaria RVC 💖") as app:
     gr.Markdown("## Ilaria RVC 💖")
     gr.Markdown("**Help keeping up the GPU donating on [Ko-Fi](https://ko-fi.com/ilariaowo)**")
     with gr.Tab("Inference"):
@@ -358,157 +358,7 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="pink", secondary_hue="rose")
 
         uvr5_button.click(inference, [uvr5_audio_file, uvr5_model], [uvr5_output_voc, uvr5_output_inst])
     
-    with gr.Tab("Extra"):
-        with gr.Accordion("Model Information", open=False):
-            def json_to_markdown_table(json_data):
-                table = "| Key | Value |\n| --- | --- |\n"
-                for key, value in json_data.items():
-                    table += f"| {key} | {value} |\n"
-                return table
-            def model_info(name):
-                for model in MODELS:
-                    if model["model_name"] == name:
-                        print(model["model"])
-                        info = model_handler.model_info(model["model"])
-                        info2 = {
-                            "Model Name": model["model_name"],
-                            "Model Config": info['config'],
-                            "Epochs Trained": info['epochs'],
-                            "Sample Rate": info['sr'],
-                            "Pitch Guidance": info['f0'],
-                            "Model Precision": info['size'],
-                        }
-                        return gr.Markdown(json_to_markdown_table(info2))
 
-                return "Model not found"
-            def update():
-                print(MODELS)
-                return gr.Dropdown(label="Model", choices=[model["model_name"] for model in MODELS])
-            with gr.Row():
-                model_info_dropdown = gr.Dropdown(label="Model", choices=[model["model_name"] for model in MODELS])
-                refresh_button = gr.Button("Refresh Models")
-                refresh_button.click(update, outputs=[model_info_dropdown])
-            model_info_button = gr.Button("Get Model Information")
-            model_info_output = gr.Textbox(value="Waiting...",label="Output", interactive=False)
-            model_info_button.click(model_info, [model_info_dropdown], [model_info_output])
-            
-
-
-        with gr.Accordion("Training Time Calculator", open=False):
-            with gr.Column():
-                epochs_input = gr.Number(label="Number of Epochs")
-                seconds_input = gr.Number(label="Seconds per Epoch")
-                calculate_button = gr.Button("Calculate Time Remaining")
-                remaining_time_output = gr.Textbox(label="Remaining Time", interactive=False)
-                
-                calculate_button.click(calculate_remaining_time,inputs=[epochs_input, seconds_input],outputs=[remaining_time_output])
-
-        with gr.Accordion("Model Fusion", open=False): 
-                    with gr.Group():
-                        def merge(ckpt_a, ckpt_b, alpha_a, sr_, if_f0_, info__, name_to_save0, version_2):
-                            for model in MODELS:
-                                if model["model_name"] == ckpt_a:
-                                    ckpt_a = model["model"]
-                                if model["model_name"] == ckpt_b:
-                                    ckpt_b = model["model"]
-                            
-                            path = model_handler.merge(ckpt_a, ckpt_b, alpha_a, sr_, if_f0_, info__, name_to_save0, version_2)
-                            if path == "Fail to merge the models. The model architectures are not the same.":
-                                return "Fail to merge the models. The model architectures are not the same."
-                            else:
-                                MODELS.append({"model": path, "index": None, "model_name": name_to_save0})
-                                return "Merged, saved as " + name_to_save0
-
-                        gr.Markdown(value="Strongly suggested to use only very clean models.")
-                        with gr.Row():
-                            def update():
-                                print(MODELS)
-                                return gr.Dropdown(label="Model A", choices=[model["model_name"] for model in MODELS]), gr.Dropdown(label="Model B", choices=[model["model_name"] for model in MODELS])
-                            refresh_button_fusion = gr.Button("Refresh Models")
-                            ckpt_a = gr.Dropdown(label="Model A", choices=[model["model_name"] for model in MODELS])
-                            ckpt_b = gr.Dropdown(label="Model B", choices=[model["model_name"] for model in MODELS])
-                            refresh_button_fusion.click(update, outputs=[ckpt_a, ckpt_b])
-                            alpha_a = gr.Slider(
-                                minimum=0,
-                                maximum=1,
-                                label="Weight of the first model over the second",
-                                value=0.5,
-                                interactive=True,
-                            )
-                    with gr.Group():
-                        with gr.Row():
-                            sr_ = gr.Radio(
-                                label="Sample rate of both models",
-                                choices=["32k","40k", "48k"],
-                                value="32k",
-                                interactive=True,
-                            )
-                            if_f0_ = gr.Radio(
-                                label="Pitch Guidance",
-                                choices=["Yes", "Nah"],
-                                value="Yes",
-                                interactive=True,
-                            )
-                            info__ = gr.Textbox(
-                                label="Add informations to the model",
-                                value="",
-                                max_lines=8,
-                                interactive=True,
-                                visible=False
-                            )
-                            name_to_save0 = gr.Textbox(
-                                label="Final Model name",
-                                value="",
-                                max_lines=1,
-                                interactive=True,
-                            )
-                            version_2 = gr.Radio(
-                                label="Versions of the models",
-                                choices=["v1", "v2"],
-                                value="v2",
-                                interactive=True,
-                            )
-                    with gr.Group():
-                        with gr.Row():
-                            but6 = gr.Button("Fuse the two models", variant="primary")
-                            info4 = gr.Textbox(label="Output", value="", max_lines=8)
-                        but6.click(
-                            merge,
-                            [ckpt_a,ckpt_b,alpha_a,sr_,if_f0_,info__,name_to_save0,version_2,],info4,api_name="ckpt_merge",)
-
-        with gr.Accordion("Model Quantization", open=False):
-            gr.Markdown("Quantize the model to a lower precision. - soon™ or never™ 😎")
-
-        with gr.Accordion("Debug", open=False):
-            def json_to_markdown_table(json_data):
-                table = "| Key | Value |\n| --- | --- |\n"
-                for key, value in json_data.items():
-                    table += f"| {key} | {value} |\n"
-                return table
-            gr.Markdown("View the models that are currently loaded in the instance.")
-
-            gr.Markdown(json_to_markdown_table({"Models": len(MODELS), "UVR Models": len(UVR_5_MODELS)}))
-
-            gr.Markdown("View the current status of the instance.")
-            status = {
-                "Status": "Running", # duh lol
-                "Models": len(MODELS),
-                "UVR Models": len(UVR_5_MODELS),
-                "CPU Usage": f"{psutil.cpu_percent()}%",
-                "RAM Usage": f"{psutil.virtual_memory().percent}%",
-                "CPU": f"{cpuinfo.get_cpu_info()['brand_raw']}",
-                "System Uptime": f"{round(time.time() - psutil.boot_time(), 2)} seconds",
-                "System Load Average": f"{psutil.getloadavg()}",
-                "====================": "====================",
-                "CPU Cores": psutil.cpu_count(),
-                "CPU Threads": psutil.cpu_count(logical=True),
-                "RAM Total": f"{round(psutil.virtual_memory().total / 1024**3, 2)} GB",
-                "RAM Used": f"{round(psutil.virtual_memory().used / 1024**3, 2)} GB",
-                "CPU Frequency": f"{psutil.cpu_freq().current} MHz",
-                "====================": "====================",
-                "GPU": "A100 - Do a request (Inference, you won't see it either way)",
-            }
-            gr.Markdown(json_to_markdown_table(status))
 
     with gr.Tab("Credits"):
         gr.Markdown(
@@ -527,4 +377,4 @@ with gr.Blocks(theme=gr.themes.Default(primary_hue="pink", secondary_hue="rose")
             ![ilaria](https://i.ytimg.com/vi/5PWqt2Wg-us/maxresdefault.jpg)
         ''')
 
-app.queue(api_open=False).launch(show_api=False)
+app.launch(share=True)
