@@ -274,7 +274,7 @@ def upload_model(index_file, pth_file, model_name):
     MODELS.append({"model": pth_file, "index": index_file, "model_name": model_name})
     return "Uploaded!"  
 
-with gr.Blocks(theme=gr.themes.Soft(primary_hue="pink", secondary_hue="rose"), title="Ilaria RVC 💖") as app:
+with gr.Blocks(theme="Hev832/niceandsimple", title="Ilaria RVC 💖") as app:
     gr.Markdown("## Ilaria RVC 💖")
     gr.Markdown("**Help keeping up the GPU donating on [Ko-Fi](https://ko-fi.com/ilariaowo)**")
     with gr.Tab("Inference"):
@@ -377,4 +377,4 @@ with gr.Blocks(theme=gr.themes.Soft(primary_hue="pink", secondary_hue="rose"), t
             ![ilaria](https://i.ytimg.com/vi/5PWqt2Wg-us/maxresdefault.jpg)
         ''')
 
-app.launch(share=True)
+app.launch(debug=True,share=True)
