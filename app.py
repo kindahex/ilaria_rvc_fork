@@ -310,7 +310,7 @@ with gr.Blocks(theme="Hev832/niceandsimple", title="Ilaria RVC 💖") as app:
     gr.Markdown("## Ilaria RVC 💖")
     gr.Markdown("**Help keeping up the GPU donating on [Ko-Fi](https://ko-fi.com/ilariaowo)**")
     with gr.Tab("Inference"):
-        sound_gui = gr.Textbox(type="filepath",visible=True,)
+        sound_gui = gr.Textbox(type="filepath",visible=True)
         def update():
             print(MODELS)
             return gr.Dropdown(label="Model",choices=[model["model_name"] for model in MODELS],visible=True,interactive=True, value=MODELS[0]["model_name"],)
